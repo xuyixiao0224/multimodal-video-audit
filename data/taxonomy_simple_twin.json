@@ -1,0 +1,60 @@
+{
+  "audit_logs": [
+    {
+      "id": 1,
+      "question_index": "Q1",
+      "content": "学生正确说出了书名，AI 仍判定错误并要求重复回答。",
+      "category": "False Negative (误报错误)",
+      "tag": "正确答案被拒"
+    },
+    {
+      "id": 2,
+      "question_index": "Q2",
+      "content": "学生回答与采分点语义一致但表述不同（同义改写），AI 未能识别。",
+      "category": "False Negative (误报错误)",
+      "tag": "语义理解失败"
+    },
+    {
+      "id": 3,
+      "question_index": "Q3",
+      "content": "学生回答遗漏了关键采分点，AI 仍判定通过。",
+      "category": "False Positive (漏报错误)",
+      "tag": "采分点缺失但判对"
+    },
+    {
+      "id": 4,
+      "question_index": "Q3",
+      "content": "学生回答包含事实性错误，AI 未指出并给予肯定反馈。",
+      "category": "False Positive (漏报错误)",
+      "tag": "事实性错误被判对/胡说八道"
+    },
+    {
+      "id": 5,
+      "question_index": "Q4",
+      "content": "AI 在第二轮追问时丢失了第一轮已确认的上下文信息。",
+      "category": "Logic Error (逻辑错误)",
+      "tag": "多轮对话上下文丢失"
+    },
+    {
+      "id": 6,
+      "question_index": "Q5",
+      "content": "学生尚未说完，AI 提前打断进入下一环节。",
+      "category": "Flow Error (流程错误)",
+      "tag": "抢答/轮次混乱"
+    },
+    {
+      "id": 7,
+      "question_index": "Q6",
+      "content": "环境噪音导致收音失败，学生回答未被识别。",
+      "category": "ASR/Technical (技术故障)",
+      "tag": "收音失败/VAD问题"
+    },
+    {
+      "id": 8,
+      "question_index": "Q7",
+      "content": "AI 引导学生逐步补全答案，交互自然完整。",
+      "category": "Positive (正向案例)",
+      "tag": "引导成功"
+    }
+  ]
+}

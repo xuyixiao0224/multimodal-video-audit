@@ -1,0 +1,535 @@
+{
+  "metadata": {
+    "version": "1.1",
+    "purpose": "AI 口述反讲质检 few-shot 示例库（脱敏样例，schema 与真实库一致）",
+    "total_categories": 7,
+    "total_examples": 16,
+    "last_updated": "2026-08-30",
+    "total_audit_logs": 16,
+    "golden_ids": [
+      1,
+      3,
+      5,
+      24,
+      9,
+      10,
+      11,
+      12,
+      19,
+      22
+    ],
+    "schema_note": "error_taxonomy 是面向人的中文分类体系（7 大类 16 子类），audit_logs 是面向 src/context/engine.py 的 few-shot 输入，由 error_taxonomy 逐条派生：content 取 definition，reasoning 取 key_signals。两者通过 audit_logs[].source_code 一一对应。",
+    "golden_ids_note": "engine.py 以 GOLDEN_IDS 白名单挑选进入 prompt 的示例。本库将白名单内的 10 个 id 分配给优先级最高的 10 个子类，其余子类使用白名单外的 id 作为候选池，便于调整示例组合而无需改代码。",
+    "sub_category_note": "sub_category 取值必须与 engine.py 中 TAXONOMY_DEFINITIONS 的子类短名一致（不含中文括号部分），否则 engine.py 的优先级排序无法命中。"
+  },
+  "audit_logs": [
+    {
+      "id": 1,
+      "sub_category": "Over-Refusal",
+      "content": "学生回答满足采分点，AI却判定错误/不完整，要求重复回答",
+      "reasoning": "文本完全匹配采分点、AI反馈为否定或重复提问",
+      "source_code": "1.1",
+      "source_category": "答案判定错误类",
+      "source_subcategory": "误判为错（假阴性）"
+    },
+    {
+      "id": 3,
+      "sub_category": "Over-Acceptance",
+      "content": "学生回答不完整/错误/答非所问，AI却判定正确并进入下一题",
+      "reasoning": "回答缺少关键采分点、AI未追问且判定为正确",
+      "source_code": "1.2",
+      "source_category": "答案判定错误类",
+      "source_subcategory": "误判为对（假阳性）"
+    },
+    {
+      "id": 5,
+      "sub_category": "Context Loss",
+      "content": "未结合学生已答对的采分点进行综合判断，导致重复引导",
+      "reasoning": "多回合对话、学生分次答完全部采分点、AI未合并判断",
+      "source_code": "2.3",
+      "source_category": "引导策略失当类",
+      "source_subcategory": "逻辑断层"
+    },
+    {
+      "id": 9,
+      "sub_category": "Context Loss",
+      "content": "忘记学生之前回合已答对的内容，重复要求回答",
+      "reasoning": "追问与之前已答内容重复、未识别已完成的采分点",
+      "source_code": "3.1",
+      "source_category": "上下文管理失效类",
+      "source_subcategory": "状态遗忘"
+    },
+    {
+      "id": 10,
+      "sub_category": "Over-Acceptance",
+      "content": "学生漏掉关键采分点，AI未识别，未引导补充直接通过",
+      "reasoning": "多采分点问题、学生只答部分、AI无引导直接下一步",
+      "source_code": "1.3",
+      "source_category": "答案判定错误类",
+      "source_subcategory": "漏答未追问"
+    },
+    {
+      "id": 11,
+      "sub_category": "Audio/ASR Issue",
+      "content": "ASR丢字、错字导致误判",
+      "reasoning": "ASR置信度<0.8、转录结果语义不完整",
+      "source_code": "4.1",
+      "source_category": "语音识别问题类",
+      "source_subcategory": "转录错误"
+    },
+    {
+      "id": 12,
+      "sub_category": "Audio/ASR Issue",
+      "content": "错误提示'听不到声音'但实际有回答",
+      "reasoning": "音频db>40、VAD检测成功、AI报无声音",
+      "source_code": "4.2",
+      "source_category": "语音识别问题类",
+      "source_subcategory": "音频检测失败"
+    },
+    {
+      "id": 19,
+      "sub_category": "Misleading & Hallucination",
+      "content": "引导词不准确、有歧义，增加学生理解成本，导致回答偏离预期",
+      "reasoning": "引导词与采分点定义不符、学生按引导词字面意思答偏",
+      "source_code": "2.1",
+      "source_category": "引导策略失当类",
+      "source_subcategory": "话术模糊/误导"
+    },
+    {
+      "id": 22,
+      "sub_category": "Guidance Failure",
+      "content": "过早给答案/无提示逼问/重复无效引导，导致学生困惑或跳过",
+      "reasoning": "AI先给答案再让学生答、连续提问无提示、学生沉默后自动跳过",
+      "source_code": "2.2",
+      "source_category": "引导策略失当类",
+      "source_subcategory": "引导节奏失控"
+    },
+    {
+      "id": 24,
+      "sub_category": "Flow Error",
+      "content": "无故重复提问、错误跳转、陷入循环",
+      "reasoning": "连续重复相同反馈、学生未回应就跳转、无限循环引导",
+      "source_code": "3.2",
+      "source_category": "上下文管理失效类",
+      "source_subcategory": "会话异常"
+    },
+    {
+      "id": 31,
+      "sub_category": "Instruction Following Failure",
+      "content": "同一题型，判定标准时松时严",
+      "reasoning": "相同题型、判定阈值差异>50%",
+      "source_code": "5.1",
+      "source_category": "判定一致性类",
+      "source_subcategory": "标准漂移",
+      "mapping_note": "「判定一致性类」是跨样本比对才能观测的问题，engine.py 的单视频子类体系中无精确对应项，此处取最接近者。"
+    },
+    {
+      "id": 32,
+      "sub_category": "Instruction Following Failure",
+      "content": "相同漏答情况，有的追问有的不追问",
+      "reasoning": "相同遗漏类型、AI处理策略不同",
+      "source_code": "5.2",
+      "source_category": "判定一致性类",
+      "source_subcategory": "处理不一致",
+      "mapping_note": "「判定一致性类」是跨样本比对才能观测的问题，engine.py 的单视频子类体系中无精确对应项，此处取最接近者。"
+    },
+    {
+      "id": 33,
+      "sub_category": "Latency/Feedback",
+      "content": "按钮点击后无即时反馈，导致学生重复提交",
+      "reasoning": "UI反馈延迟>2秒、无loading态、学生重复操作",
+      "source_code": "6.1",
+      "source_category": "交互体验缺陷类",
+      "source_subcategory": "响应延迟"
+    },
+    {
+      "id": 34,
+      "sub_category": "Content Design Issue",
+      "content": "UI动画让学生误解需要重复操作",
+      "reasoning": "手指/动画提示、学生重复回答",
+      "source_code": "6.2",
+      "source_category": "交互体验缺陷类",
+      "source_subcategory": "视觉误导"
+    },
+    {
+      "id": 35,
+      "sub_category": "Content Design Issue",
+      "content": "配置过于复杂或模糊，导致模型理解不稳定",
+      "reasoning": "采分点数量>5、包含否定词、口语化严重",
+      "source_code": "7.1",
+      "source_category": "内容与配置问题类",
+      "source_subcategory": "采分点配置不合理"
+    },
+    {
+      "id": 36,
+      "sub_category": "Content Design Issue",
+      "content": "题目本身设计有缺陷，过于简单或需要纠音",
+      "reasoning": "答案在题干中、需纠正错误认知、多音字",
+      "source_code": "7.2",
+      "source_category": "内容与配置问题类",
+      "source_subcategory": "题库设计问题"
+    }
+  ],
+  "error_taxonomy": [
+    {
+      "code": "1.1",
+      "category": "答案判定错误类",
+      "subcategory": "误判为错（假阴性）",
+      "definition": "学生回答满足采分点，AI却判定错误/不完整，要求重复回答",
+      "key_signals": [
+        "文本完全匹配采分点",
+        "AI反馈为否定或重复提问"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：学生回答满足采分点，AI却判定错误/不完整，要求重复回答（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "文本完全匹配采分点、AI反馈为否定或重复提问"
+        }
+      ]
+    },
+    {
+      "code": "1.2",
+      "category": "答案判定错误类",
+      "subcategory": "误判为对（假阳性）",
+      "definition": "学生回答不完整/错误/答非所问，AI却判定正确并进入下一题",
+      "key_signals": [
+        "回答缺少关键采分点",
+        "AI未追问且判定为正确"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：学生回答不完整/错误/答非所问，AI却判定正确并进入下一题（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "回答缺少关键采分点、AI未追问且判定为正确"
+        }
+      ]
+    },
+    {
+      "code": "1.3",
+      "category": "答案判定错误类",
+      "subcategory": "漏答未追问",
+      "definition": "学生漏掉关键采分点，AI未识别，未引导补充直接通过",
+      "key_signals": [
+        "多采分点问题",
+        "学生只答部分",
+        "AI无引导直接下一步"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：学生漏掉关键采分点，AI未识别，未引导补充直接通过（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "多采分点问题、学生只答部分"
+        }
+      ]
+    },
+    {
+      "code": "2.1",
+      "category": "引导策略失当类",
+      "subcategory": "话术模糊/误导",
+      "definition": "引导词不准确、有歧义，增加学生理解成本，导致回答偏离预期",
+      "key_signals": [
+        "引导词与采分点定义不符",
+        "学生按引导词字面意思答偏"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：引导词不准确、有歧义，增加学生理解成本，导致回答偏离预期（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "引导词与采分点定义不符、学生按引导词字面意思答偏"
+        }
+      ]
+    },
+    {
+      "code": "2.2",
+      "category": "引导策略失当类",
+      "subcategory": "引导节奏失控",
+      "definition": "过早给答案/无提示逼问/重复无效引导，导致学生困惑或跳过",
+      "key_signals": [
+        "AI先给答案再让学生答",
+        "连续提问无提示",
+        "学生沉默后自动跳过"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：过早给答案/无提示逼问/重复无效引导，导致学生困惑或跳过（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "AI先给答案再让学生答、连续提问无提示"
+        }
+      ]
+    },
+    {
+      "code": "2.3",
+      "category": "引导策略失当类",
+      "subcategory": "逻辑断层",
+      "definition": "未结合学生已答对的采分点进行综合判断，导致重复引导",
+      "key_signals": [
+        "多回合对话",
+        "学生分次答完全部采分点",
+        "AI未合并判断"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：未结合学生已答对的采分点进行综合判断，导致重复引导（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "多回合对话、学生分次答完全部采分点"
+        }
+      ]
+    },
+    {
+      "code": "3.1",
+      "category": "上下文管理失效类",
+      "subcategory": "状态遗忘",
+      "definition": "忘记学生之前回合已答对的内容，重复要求回答",
+      "key_signals": [
+        "追问与之前已答内容重复",
+        "未识别已完成的采分点"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：忘记学生之前回合已答对的内容，重复要求回答（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "追问与之前已答内容重复、未识别已完成的采分点"
+        }
+      ]
+    },
+    {
+      "code": "3.2",
+      "category": "上下文管理失效类",
+      "subcategory": "会话异常",
+      "definition": "无故重复提问、错误跳转、陷入循环",
+      "key_signals": [
+        "连续重复相同反馈",
+        "学生未回应就跳转",
+        "无限循环引导"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：无故重复提问、错误跳转、陷入循环（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "连续重复相同反馈、学生未回应就跳转"
+        }
+      ]
+    },
+    {
+      "code": "4.1",
+      "category": "语音识别问题类",
+      "subcategory": "转录错误",
+      "definition": "ASR丢字、错字导致误判",
+      "key_signals": [
+        "ASR置信度<0.8",
+        "转录结果语义不完整"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：ASR丢字、错字导致误判（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "ASR置信度<0.8、转录结果语义不完整"
+        }
+      ]
+    },
+    {
+      "code": "4.2",
+      "category": "语音识别问题类",
+      "subcategory": "音频检测失败",
+      "definition": "错误提示'听不到声音'但实际有回答",
+      "key_signals": [
+        "音频db>40",
+        "VAD检测成功",
+        "AI报无声音"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：错误提示'听不到声音'但实际有回答（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "音频db>40、VAD检测成功"
+        }
+      ]
+    },
+    {
+      "code": "5.1",
+      "category": "判定一致性类",
+      "subcategory": "标准漂移",
+      "definition": "同一题型，判定标准时松时严",
+      "key_signals": [
+        "相同题型",
+        "判定阈值差异>50%"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：同一题型，判定标准时松时严（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "相同题型、判定阈值差异>50%"
+        }
+      ]
+    },
+    {
+      "code": "5.2",
+      "category": "判定一致性类",
+      "subcategory": "处理不一致",
+      "definition": "相同漏答情况，有的追问有的不追问",
+      "key_signals": [
+        "相同遗漏类型",
+        "AI处理策略不同"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：相同漏答情况，有的追问有的不追问（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "相同遗漏类型、AI处理策略不同"
+        }
+      ]
+    },
+    {
+      "code": "6.1",
+      "category": "交互体验缺陷类",
+      "subcategory": "响应延迟",
+      "definition": "按钮点击后无即时反馈，导致学生重复提交",
+      "key_signals": [
+        "UI反馈延迟>2秒",
+        "无loading态",
+        "学生重复操作"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：按钮点击后无即时反馈，导致学生重复提交（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "UI反馈延迟>2秒、无loading态"
+        }
+      ]
+    },
+    {
+      "code": "6.2",
+      "category": "交互体验缺陷类",
+      "subcategory": "视觉误导",
+      "definition": "UI动画让学生误解需要重复操作",
+      "key_signals": [
+        "手指/动画提示",
+        "学生重复回答"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：UI动画让学生误解需要重复操作（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "手指/动画提示、学生重复回答"
+        }
+      ]
+    },
+    {
+      "code": "7.1",
+      "category": "内容与配置问题类",
+      "subcategory": "采分点配置不合理",
+      "definition": "配置过于复杂或模糊，导致模型理解不稳定",
+      "key_signals": [
+        "采分点数量>5",
+        "包含否定词",
+        "口语化严重"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：配置过于复杂或模糊，导致模型理解不稳定（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "采分点数量>5、包含否定词"
+        }
+      ]
+    },
+    {
+      "code": "7.2",
+      "category": "内容与配置问题类",
+      "subcategory": "题库设计问题",
+      "definition": "题目本身设计有缺陷，过于简单或需要纠音",
+      "key_signals": [
+        "答案在题干中",
+        "需纠正错误认知",
+        "多音字"
+      ],
+      "examples": [
+        {
+          "error_time": "00:00-00:10",
+          "description": "示例：题目本身设计有缺陷，过于简单或需要纠音（此处为脱敏后的通用示例，实际使用时替换为真实质检案例）",
+          "student_text": "（脱敏）",
+          "scoring_points": [
+            "（脱敏）"
+          ],
+          "ai_feedback": "（脱敏）",
+          "judgement_key": "答案在题干中、需纠正错误认知"
+        }
+      ]
+    }
+  ]
+}
